@@ -1,6 +1,5 @@
 import express from "express";
 import { pool } from "./db";
-import "dotenv/config";
 
 export const app = express();
 app.use(express.json()); 
@@ -27,4 +26,28 @@ app.post("/tasks", async (req, res) => {
   );
 
   res.status(201).json(result.rows[0]);
+});
+
+app.patch("/tasks/:id", async (req, res) => {
+  const id = Number(req.params.id);
+  const { done } = req.body;
+
+  if (!Number.isInteger(id)) {
+    return res.status(400).json({ error: "invalid id" });
+  }
+
+  if (typeof done !== "boolean") {
+    return res.status(400).json({ error: "done must be boolean" });
+  }
+
+  const result = await pool.query(
+    "UPDATE tasks SET done = $1 WHERE id = $2 RETURNING *;",
+    [done, id]
+  );
+
+  if (result.rowCount === 0) {
+    return res.status(404).json({ error: "task not found" });
+  }
+
+  res.json(result.rows[0]);
 });
