@@ -51,3 +51,19 @@ app.patch("/tasks/:id", async (req, res) => {
 
   res.json(result.rows[0]);
 });
+
+app.delete("/tasks/:id", async (req, res) => {
+  const id = Number(req.params.id);
+
+  if (!Number.isInteger(id)) {
+    return res.status(400).json({ error: "invalid id" });
+  }
+
+  const result = await pool.query("DELETE FROM tasks WHERE id = $1;", [id]);
+
+  if (result.rowCount === 0) {
+    return res.status(404).json({ error: "task not found" });
+  }
+
+  res.status(204).send();
+});
