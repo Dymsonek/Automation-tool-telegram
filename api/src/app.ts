@@ -1,5 +1,6 @@
 import express from "express";
 import { pool } from "./db";
+import { sendTelegramMessage } from "./telegram";
 
 export const app = express();
 app.use(express.json()); 
@@ -38,6 +39,19 @@ app.post("/tasks", async (req, res) => {
   );
 
   res.status(201).json(result.rows[0]);
+});
+
+app.post("/notify", async (req, res) => {
+  const result = await pool.query(
+    "SELECT id, title FROM tasks WHERE done = false ORDER BY id;"
+  );
+
+  const lines = result.rows.map((t) => `- [${t.id}] ${t.title}`);
+  const text =
+    `morning briefing\n\ntodo:\n` + (lines.length ? lines.join("\n") : "- (empty)");
+
+  await sendTelegramMessage(text);
+  res.json({ ok: true });
 });
 
 app.patch("/tasks/:id", async (req, res) => {
