@@ -13,6 +13,18 @@ app.get("/tasks", async (req, res) => {
   res.json(result.rows);
 });
 
+app.get("/briefing", async (req, res) => {
+  const result = await pool.query(
+    "SELECT id, title FROM tasks WHERE done = false ORDER BY id;"
+  );
+
+  const lines = result.rows.map((t) => `- [${t.id}] ${t.title}`);
+  const text =
+    `Morning briefing\n\nTodo:\n` + (lines.length ? lines.join("\n") : "- (empty)");
+
+  res.type("text/plain").send(text);
+});
+
 app.post("/tasks", async (req, res) => {
   const { title } = req.body;
 
