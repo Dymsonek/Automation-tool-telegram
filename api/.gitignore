@@ -7,3 +7,5 @@ public/static
 .env
 .logs/*.log
 dist/tokens.json
+api/tokens.json
+tokens.json
