@@ -1,7 +1,6 @@
 import express from "express";
 import { pool } from "./db";
 import { sendTelegramMessage } from "./telegram";
-import { getTodayEvents } from "./calendar";
 import { getOAuthClient, loadTokens, saveTokens } from "./googleAuth";
 import { google } from "googleapis";
 import { buildBriefingText } from "./briefing";
