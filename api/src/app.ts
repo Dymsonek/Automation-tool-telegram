@@ -95,7 +95,7 @@ app.delete("/tasks/:id", async (req, res) => {
   res.status(204).send();
 });
 
-cron.schedule("* * * * *", async () => {
+cron.schedule("0 8 * * *", async () => {
   const result = await pool.query(
     "SELECT id, title FROM tasks WHERE done = false ORDER BY id;"
   );
