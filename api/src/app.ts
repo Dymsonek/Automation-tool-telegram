@@ -1,9 +1,10 @@
 import express from "express";
-import cron from "node-cron";
 import { pool } from "./db";
 import { sendTelegramMessage } from "./telegram";
+import { getTodayEvents } from "./calendar";
 import { getOAuthClient, loadTokens, saveTokens } from "./googleAuth";
 import { google } from "googleapis";
+import { buildBriefingText } from "./briefing";
 
 export const app = express();
 app.use(express.json()); 
@@ -18,14 +19,7 @@ app.get("/tasks", async (req, res) => {
 });
 
 app.get("/briefing", async (req, res) => {
-  const result = await pool.query(
-    "SELECT id, title FROM tasks WHERE done = false ORDER BY id;"
-  );
-
-  const lines = result.rows.map((t) => `- [${t.id}] ${t.title}`);
-  const text =
-    `Morning briefing\n\nTodo:\n` + (lines.length ? lines.join("\n") : "- (empty)");
-
+  const text = await buildBriefingText();
   res.type("text/plain").send(text);
 });
 
@@ -94,14 +88,7 @@ app.post("/tasks", async (req, res) => {
 });
 
 app.post("/notify", async (req, res) => {
-  const result = await pool.query(
-    "SELECT id, title FROM tasks WHERE done = false ORDER BY id;"
-  );
-
-  const lines = result.rows.map((t) => `- [${t.id}] ${t.title}`);
-  const text =
-    `morning briefing\n\ntodo:\n` + (lines.length ? lines.join("\n") : "- (empty)");
-
+  const text = await buildBriefingText();
   await sendTelegramMessage(text);
   res.json({ ok: true });
 });
@@ -146,14 +133,4 @@ app.delete("/tasks/:id", async (req, res) => {
   res.status(204).send();
 });
 
-cron.schedule("0 8 * * *", async () => {
-  const result = await pool.query(
-    "SELECT id, title FROM tasks WHERE done = false ORDER BY id;"
-  );
 
-  const lines = result.rows.map((t) => `- [${t.id}] ${t.title}`);
-  const text =
-    `minute briefing\n\ntodo:\n` + (lines.length ? lines.join("\n") : "- (empty)");
-
-  await sendTelegramMessage(text);
-});
