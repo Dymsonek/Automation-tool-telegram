@@ -6,4 +6,4 @@ public/static
 *.marko.js
 .env
 .logs/*.log
-dist/
+dist/tokens.json
