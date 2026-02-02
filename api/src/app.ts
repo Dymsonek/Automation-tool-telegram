@@ -1,4 +1,5 @@
 import express from "express";
+import cron from "node-cron";
 import { pool } from "./db";
 import { sendTelegramMessage } from "./telegram";
 
@@ -92,4 +93,16 @@ app.delete("/tasks/:id", async (req, res) => {
   }
 
   res.status(204).send();
+});
+
+cron.schedule("* * * * *", async () => {
+  const result = await pool.query(
+    "SELECT id, title FROM tasks WHERE done = false ORDER BY id;"
+  );
+
+  const lines = result.rows.map((t) => `- [${t.id}] ${t.title}`);
+  const text =
+    `minute briefing\n\ntodo:\n` + (lines.length ? lines.join("\n") : "- (empty)");
+
+  await sendTelegramMessage(text);
 });
