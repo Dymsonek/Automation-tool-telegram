@@ -36,7 +36,7 @@ app.get("/auth/google", (req, res) => {
 
 app.get("/calendar/today", async (req, res) => {
   const oauth2Client = getOAuthClient();
-  const tokens = loadTokens();
+  const tokens = await loadTokens();
   if (!tokens) return res.status(401).json({ error: "not connected. visit /auth/google" });
 
   oauth2Client.setCredentials(tokens);
@@ -67,7 +67,7 @@ app.get("/auth/google/callback", async (req, res) => {
   const oauth2Client = getOAuthClient();
   const { tokens } = await oauth2Client.getToken(code);
 
-  saveTokens(tokens);
+  await saveTokens(tokens);
   res.type("text/plain").send("google calendar connected. you can call /calendar/today");
 });
 

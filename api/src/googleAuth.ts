@@ -1,7 +1,5 @@
 import { google } from "googleapis";
-import fs from "node:fs";
-
-const tokenPath = "tokens.json";
+import { pool } from "./db";
 
 export function getOAuthClient() {
   const clientId = process.env.GOOGLE_CLIENT_ID;
@@ -15,11 +13,24 @@ export function getOAuthClient() {
   return new google.auth.OAuth2(clientId, clientSecret, redirectUri);
 }
 
-export function saveTokens(tokens: unknown) {
-  fs.writeFileSync(tokenPath, JSON.stringify(tokens, null, 2));
+const USER_ID = "me";
+
+export async function saveTokens(tokens: unknown) {
+  await pool.query(
+    `
+    INSERT INTO google_tokens (user_id, tokens)
+    VALUES ($1, $2::jsonb)
+    ON CONFLICT (user_id)
+    DO UPDATE SET tokens = EXCLUDED.tokens, updated_at = now();
+    `,
+    [USER_ID, JSON.stringify(tokens)]
+  );
 }
 
-export function loadTokens(): any | null {
-  if (!fs.existsSync(tokenPath)) return null;
-  return JSON.parse(fs.readFileSync(tokenPath, "utf8"));
+export async function loadTokens(): Promise<any | null> {
+  const res = await pool.query(
+    "SELECT tokens FROM google_tokens WHERE user_id = $1;",
+    [USER_ID]
+  );
+  return res.rowCount ? res.rows[0].tokens : null;
 }

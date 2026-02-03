@@ -3,7 +3,7 @@ import { getOAuthClient, loadTokens } from "./googleAuth";
 
 export async function getTodayEvents() {
   const oauth2Client = getOAuthClient();
-  const tokens = loadTokens();
+  const tokens = await loadTokens();
   
   if (!tokens) return null; 
 
